@@ -1,0 +1,99 @@
+.printable-invoice {
+  position: relative;
+}
+
+.invoice-stamp {
+  position: absolute;
+  bottom: 50px;
+  left: 25px;
+  transform: rotate(-15deg);
+  width: 150px;
+  height: 150px;
+  opacity: 0.6;
+  z-index: 5;
+  pointer-events: none;
+  filter: blur(0.5px);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.stamp-paid {
+  background-image: url('/assets/paid-stamp.png');
+}
+
+.stamp-pending {
+  background-image: url('/assets/pending-stamp.png');
+}
+
+/* Fallback to text if image not available */
+.invoice-stamp.fallback {
+  padding: 10px 20px;
+  font-size: 28px;
+  font-weight: 900;
+  border: 3px solid;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-paid.fallback {
+  color: #b91c1c;
+  border-color: #b91c1c;
+  background: rgba(185, 28, 28, 0.12);
+  box-shadow: inset 0 0 15px rgba(185, 28, 28, 0.15), 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.stamp-pending.fallback {
+  color: #1d4ed8;
+  border-color: #1d4ed8;
+  background: rgba(29, 78, 216, 0.12);
+  box-shadow: inset 0 0 15px rgba(29, 78, 216, 0.15), 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@media print {
+  .invoice-stamp {
+    opacity: 0.7;
+    margin-top: 10rem;
+    filter: blur(0.3px);
+  }
+  
+  /* Hide print button when printing */
+  button {
+    display: none !important;
+  }
+  
+  /* Hide elements with no-print class */
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure clean print layout */
+  body {
+    background: white !important;
+  }
+  
+  .printable-invoice {
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+  
+  /* Hide browser default print headers and footers */
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  
+  /* Try to hide default browser print headers/footers */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

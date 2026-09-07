@@ -1,0 +1,4 @@
+PLACE YOUR LOGO IMAGE HERE
+Save your logo image as "store-logo.png" or "store-logo.jpg" in this folder
+The logo should be named exactly: store-logo.png (or .jpg)
+Example: C:\Users\DELL\Desktop\billing system\public\assets\store-logo.png

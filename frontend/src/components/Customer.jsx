@@ -1,0 +1,287 @@
+import axios from 'axios'
+import { CheckCircle2, Plus, SquarePen, Trash2, X, Search } from 'lucide-react'
+import React, { useEffect, useState, useCallback } from 'react'
+
+const Customer = () => {
+  const [isopen,setisopen]=useState(false)
+  const [data,setdata]=useState(null)
+  const [err,seterr]=useState(null)
+  const [success,setsuccess]=useState(null)
+  const [loading,setloading]=useState(false)
+  const [editId,seteditId]=useState(null)
+  const [searchQuery,setSearchQuery]=useState("")
+  const [formData,setformData]=useState({
+    name:"",
+    phone:"",
+    email:"",
+    address:"",
+  })
+
+  const getCustomers = useCallback(async () => {
+    try {
+      const res = await axios.get("http://localhost:5555/allCustomer")
+      setdata(res.data)
+    } catch (error) {
+      console.error("Error fetching customers:", error)
+      setdata([])
+    }
+  }, [])
+
+  useEffect(() => {
+    getCustomers()
+  }, [getCustomers])
+
+  const addCustomer = async () => {
+    if(!formData.name){
+      seterr("Enter name")
+      return
+    }
+    if(!formData.address){
+      seterr("Enter address")
+      return
+    }
+    setloading(true)
+    try {
+      await axios.post("http://localhost:5555/customer",{
+        name:formData.name,
+        phone:formData.phone ? Number(formData.phone) : undefined,
+        email:formData.email || undefined,
+        address:formData.address,
+      })
+
+      seterr(null)
+      setisopen(false)
+      setloading(false)
+      setformData({
+        name:"",
+        phone:"",
+        email:"",
+        address:"",
+      })
+      setsuccess("Customer added successfully")
+      getCustomers()
+      setTimeout(()=>setsuccess(null),3000)
+    } catch (error) {
+      setloading(false)
+      seterr(error?.response?.data?.message)
+      setTimeout(()=>seterr(null),3000)
+    }
+  }
+
+  const updateCustomer = async () => {
+    if(!formData.name){
+      seterr("Enter name")
+      return
+    }
+    if(!formData.address){
+      seterr("Enter address")
+      return
+    }
+    setloading(true)
+    try {
+      await axios.put("http://localhost:5555/updateCustomer",{
+        _id:editId,
+        name:formData.name,
+        phone:formData.phone ? Number(formData.phone) : undefined,
+        email:formData.email || undefined,
+        address:formData.address,
+      })
+
+      seterr(null)
+      setisopen(false)
+      setloading(false)
+      seteditId(null)
+      setformData({
+        name:"",
+        phone:"",
+        email:"",
+        address:"",
+      })
+      setsuccess("Customer updated successfully")
+      getCustomers()
+      setTimeout(()=>setsuccess(null),3000)
+    } catch (error) {
+      setloading(false)
+      seterr(error?.response?.data?.message)
+      setTimeout(()=>seterr(null),3000)
+    }
+  }
+
+  const handleForm=(e)=>{
+    e.preventDefault()
+    if(editId){
+      updateCustomer()
+    }else{
+      addCustomer()
+    }
+  }
+
+  const openEdit = (k) => {
+    seteditId(k._id)
+    setformData({
+      name:k.name,
+      phone:k.phone || "",
+      email:k.email || "",
+      address:k.address,
+    })
+    seterr(null)
+    setisopen(true)
+  }
+
+  const closeForm = () => {
+    setisopen(false)
+    seteditId(null)
+    seterr(null)
+    setformData({
+      name:"",
+      phone:"",
+      email:"",
+      address:"",
+    })
+  }
+
+  const delCustomer = async (id) => {
+    try {
+      await axios.delete("http://localhost:5555/deleteCustomer", {
+        data: {
+          _id: id,
+        },
+      })
+
+      setsuccess("Customer deleted successfully")
+      getCustomers()
+      setTimeout(() => setsuccess(null), 3000)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  return (
+    <div className='bg-[#0F172A] w-full h-full flex-col p-7 relative'>
+
+      {success!==null?<div className='absolute z-50 left-[400px]  flex items-center gap-2 bg-green-500/10 border border-green-500/40 rounded-lg px-4 py-3 text-sm text-green-400 shadow-lg z-50'><CheckCircle2 size={16} /><p>{success}</p></div>:null}
+
+         <div className='flex bg-[#162032] border   border-white/7 justify-between text-white p-7 rounded-xl'>
+              <div>
+                  <h1 className='text-2xl tracking-wider font-bold '>Customer Directory</h1>
+                  <p className='text-sm'>Manage corporate and retail clients..</p>
+              </div>
+              <div className='flex gap-3 items-center'>
+                  <div className='relative'>
+                      <Search size={16} className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400' />
+                      <input 
+                        type='text' 
+                        placeholder='Search by name...' 
+                        value={searchQuery}
+                        onChange={(e)=>setSearchQuery(e.target.value)}
+                        className='pl-10 p-2 bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-white placeholder-gray-500'
+                      />
+                  </div>
+                  <div onClick={()=>setisopen(true)} className='flex gap-3 items-center  border  border-white/10 p-3 rounded-xl bg-[#3B82F6]'>
+                      <Plus />
+                      <button  className=''>Add Customer</button>
+                      
+                  </div>
+              </div>
+           </div>
+        {/* Customers */}
+             <div className='grid   mb-4 grid-cols-7  border rounded-xl border-white/8 p-5 mt-6'>
+
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Name</p>
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Phone</p>
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Email</p>
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Address</p>
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Total Business</p>
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Remaining Amount</p>
+  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Actions</p>
+
+    {data?.filter((k)=>k?.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((k)=>{
+     const id = k?._id?.slice(20, );
+        return(
+            <React.Fragment key={k._id}>
+
+
+      <p className="py-4 text-sm text-white border-b border-gray-800">   {k?.name}</p>
+
+      <p className="py-4 text-sm text-gray-300 border-b border-gray-800">    {k?.phone || "-"} </p>
+
+      <p className="py-4 text-sm text-gray-300 border-b truncate border-gray-800">    {k?.email || "-"} </p>
+
+      <p className="py-4 text-sm text-[#1FE39A] border-b  border-gray-800">  {k?.address} </p>
+<p className="py-4 text-sm text-[#1FE39A] border-b border-gray-800">
+  {Math.round(k?.business) || 0}
+</p>
+<p className="py-4 text-sm text-amber-400 border-b border-gray-800">
+  {Math.round(k?.remainingAmount) || 0}
+</p>
+<p className="py-4 text-sm border-b border-gray-800 flex items-center gap-3">
+  <SquarePen onClick={()=>openEdit(k)} size={16} className='cursor-pointer text-blue-400 hover:text-blue-300' />
+  <Trash2 onClick={()=>delCustomer(k._id)} size={16} className='cursor-pointer text-red-400 hover:text-red-300' />
+</p>
+ 
+            </React.Fragment>
+        )
+    })}
+  
+     </div>
+      {/* form */}
+
+  {isopen===true &&(
+        <div className='h-full w-full  text-white flex items-center justify-center bg-black/70 fixed inset-0'>
+  <form onSubmit={handleForm} className='bg-[#020617] p-6 rounded-xl mt-20 ml-30 w-[420px] border border-white/10  '>
+    <div className='flex justify-between items-center border-b border-gray-700 pb-4'>
+      <h1 className='text-lg font-semibold'>{editId?"Edit Customer":"Add New Customer"}</h1>
+      <button onClick={closeForm} type='button' className='text-gray-400 hover:text-white'>
+        <X size={18} />
+      </button>
+    </div>
+
+    <div className='flex flex-col gap-1'>
+      <div className='flex flex-col justify-start mt-4'>
+        <label className='text-sm text-gray-400 font-medium mb-1' htmlFor='name'>Company / Customer Name</label>
+        <input value={formData.name} onChange={(e)=>setformData({
+          ...formData,
+          name:e.target.value
+        })} id='name' type='text' className='p-2 w-full bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500' />
+      </div>
+
+      <div className='flex flex-col justify-start mt-4'>
+        <label className='text-sm text-gray-400 font-medium mb-1' htmlFor='phone'>Phone (Optional)</label>
+        <input value={formData.phone} onChange={(e)=>setformData({
+          ...formData,
+          phone:e.target.value
+        })} id='phone' type='number' className='p-2 w-full bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500' />
+      </div>
+
+      <div className='flex flex-col justify-start mt-4'>
+        <label className='text-sm text-gray-400 font-medium mb-1' htmlFor='email'>Email (Optional)</label>
+        <input value={formData.email} onChange={(e)=>setformData({
+          ...formData,
+          email:e.target.value
+        })} id='email' type='text' className='p-2 w-full bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500' />
+      </div>
+
+      <div className='flex flex-col justify-start mt-4'>
+        <label className='text-sm text-gray-400 font-medium mb-1' htmlFor='address'>Address</label>
+        <input value={formData.address} onChange={(e)=>setformData({
+          ...formData,
+          address:e.target.value
+        })} id='address' type='text' className='p-2 w-full bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500' />
+      </div>
+
+      {err!==null?<div className='flex items-center gap-2 bg-red-500/10 border border-red-500/40 rounded-lg px-3 py-2 mt-3'><p className='text-sm text-red-400'>{err}</p></div>:null}
+    </div>
+
+    <div className='flex justify-end gap-3 mt-6'>
+      <button onClick={closeForm} type='button' disabled={loading} className='px-4 py-2 rounded-lg bg-[#1E293B] text-white hover:bg-[#334155] disabled:opacity-50 disabled:cursor-not-allowed'>Cancel</button>
+      <button type='submit' disabled={loading} className='px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed'>{loading?"Saving":editId?"Update Customer":"Save Customer"}</button>
+    </div>
+  </form>
+</div>
+  )}
+    </div>
+
+  )
+}
+
+export default Customer
