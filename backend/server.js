@@ -41,6 +41,10 @@ const refund=require("./Src/Refund/refund")
 // auth
 const auth=require("./Src/Auth/auth")
 
+// seller
+const sellerRoutes=require("./Src/Seller/sellerRoutes")
+const purchaseRoutes=require("./Src/Seller/purchaseRoutes")
+
 
 // products
 app.use("/",inventory)
@@ -63,6 +67,9 @@ app.use("/",payRemaining)
 app.use("/",refund)
 // auth
 app.use("/",auth)
+// seller
+app.use("/",sellerRoutes)
+app.use("/",purchaseRoutes)
 
 
 

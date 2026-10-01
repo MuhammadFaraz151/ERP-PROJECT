@@ -1,7 +1,7 @@
 import React from 'react'
 import { SquarePen, Trash2, AlertTriangle } from 'lucide-react'
 
-const InventoryCard = ({ data, compact = false, onEdit, onDelete }) => {
+const InventoryCard = ({ data, compact = false, onEdit, onDelete, theme }) => {
   const k = data
   
   
@@ -26,30 +26,34 @@ const getStatus = () => {
   return (
     <>
       {!compact && (
-        <p className="py-4 text-[#4D8DFF] border-b border-gray-800"> {k?._id?.slice(20, )}</p>
+        <p className={`py-4 text-[#4D8DFF] border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}> {k?._id?.slice(20, )}</p>
       )}
 
-      <p className="py-4 text-white border-b border-gray-800">   {k.name}</p>
+      <p className={`py-4 border-b ${theme === 'dark' ? 'text-white border-gray-800' : 'text-gray-900 border-gray-100'}`}>   {k.name}</p>
 
       {!compact && (
-        <p className="py-4 text-gray-300 border-b border-gray-800">    {k.category} </p>
-      )}
-
-      {!compact && (
-        <p className="py-4 text-white border-b border-gray-800">  Rs. {k.unitCost} </p>
+        <p className={`py-4 border-b ${theme === 'dark' ? 'text-gray-300 border-gray-800' : 'text-gray-600 border-gray-100'}`}>    {k.category} </p>
       )}
 
       {!compact && (
-        <p className="py-4 text-[#1FE39A] border-b border-gray-800">  Rs. {k.sellingPrice} </p>
+        <p className={`py-4 border-b ${theme === 'dark' ? 'text-white border-gray-800' : 'text-gray-900 border-gray-100'}`}>  Rs. {k.unitCost} </p>
       )}
 
-      <p className={`py-4 text-sm border-b border-gray-800 flex items-center gap-1 ${k.stock < 5 ? 'text-red-500' : 'text-white'}`}>
-        {k.stock}
+      {!compact && (
+        <p className={`py-4 text-[#1FE39A] border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>  Rs. {k.sellingPrice} </p>
+      )}
+
+      <p className={`py-4 text-sm border-b flex items-center gap-1 ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'} ${k.stock < 5 ? 'text-red-500' : theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        {k.stock < 0 ? 0 : k.stock}
         {k.stock < 5 && <AlertTriangle size={14} />}
       </p>
 
       {!compact && (
-        <div className="py-3 border-b border-gray-800">
+        <p className={`py-4 border-b ${theme === 'dark' ? 'text-gray-300 border-gray-800' : 'text-gray-600 border-gray-100'}`}>    {k.unit || 'pcs'} </p>
+      )}
+
+      {!compact && (
+        <div className={`py-3 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
               status === 'expired'
@@ -63,12 +67,12 @@ const getStatus = () => {
       )}
 
       {onEdit && onDelete && !compact && (
-        <div className='flex gap-4 border-b border-gray-800 py-4'>
-          <button onClick={() => onEdit(k)} ><SquarePen className='text-white cursor-pointer ' /></button>
-          <button onClick={() => onDelete(k?._id)} className='text-white cursor-pointer'><Trash2 /></button>
+        <div className={`flex gap-4 border-b py-4 ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
+          <button onClick={() => onEdit(k)} ><SquarePen className={`cursor-pointer ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`} /></button>
+          <button onClick={() => onDelete(k?._id)} className={`cursor-pointer ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}><Trash2 /></button>
         </div>
       )}
-    
+
     </>
   )
 }

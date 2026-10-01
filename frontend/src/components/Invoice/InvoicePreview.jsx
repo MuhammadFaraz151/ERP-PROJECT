@@ -4,10 +4,15 @@ import storeLogo from '../../assets/store-log.png';
 import './InvoicePreview.css'
 import img from '../../assets/paid-stamp.png'
 
-const InvoicePreview = ({customer,setInvoice}) => {
+const InvoicePreview = ({customer,setInvoice, theme}) => {
   const data=useSelector((k)=>k.infoo.infoo) || {}
   const info = data.info || {}
   const items = (info.items || []).filter(item => item.productId)
+  const appSettings = useSelector((state) => state.infoo.appSettings) || {
+    appName: 'BillStream Pro',
+    storeName: 'Malik karyana Store',
+    logo: null
+  }
   
   // Calculate total GST from items
   const calculatedTotalGST = items.reduce((sum, item) => {
@@ -18,11 +23,11 @@ const InvoicePreview = ({customer,setInvoice}) => {
   }, 0);  
 if (!customer || items.length === 0) {
     return (
-      <div  className='bg-[#020617]  flex justify-between items-center ml-40 border border-white/10 rounded-xl p-6 text-white w-full max-w-3xl'>
-        <p className='text-sm text-gray-400'>
+      <div className={`flex justify-between items-center ml-40 border rounded-xl p-6 w-full max-w-3xl ${theme === 'dark' ? 'bg-[#020617] text-white border-white/10' : 'bg-white text-gray-900 border-gray-200'}`}>
+        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           Please select a customer and add at least one item to generate the invoice.
         </p>
-        <button onClick={()=>setInvoice(false)}  type='button' className='flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700'>
+        <button onClick={()=>setInvoice(false)} type='button' className='flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700'>
           <Plus size={16} />
           Create Invoice
         </button>
@@ -55,23 +60,31 @@ if (!customer || items.length === 0) {
   }
 
   return (
-    <div className='printable-invoice bg-[#020617] ml-40 border border-white/10 rounded-xl p-6 text-white w-full max-w-3xl relative'>
+    <div className={`printable-invoice ml-40 border rounded-xl p-6 w-full max-w-3xl relative ${theme === 'dark' ? 'bg-[#020617] text-white border-white/10' : 'bg-white text-gray-900 border-gray-200'}`}>
 
       <div className='flex justify-between items-start'>
         <div className='flex items-center gap-4'>
           <div className='w-20 h-20 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-white/20'>
-            <img 
-              src={storeLogo}
-              alt='MALIK KARYANA STORE Logo' 
-              className='w-full h-full object-cover'
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML = '<span class="text-2xl">🏪</span>';
-              }}
-            />
+            {appSettings.logo ? (
+              <img 
+                src={appSettings.logo}
+                alt={`${appSettings.appName} Logo`} 
+                className='w-full h-full object-cover'
+              />
+            ) : (
+              <img 
+                src={storeLogo}
+                alt='MALIK KARYANA STORE Logo' 
+                className='w-full h-full object-cover'
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<span class="text-2xl">🏪</span>';
+                }}
+              />
+            )}
           </div>
           <div>
-            <h2 className='text-xl font-bold text-white'>MALIK KARYANA STORE</h2>
+            <h2 className='text-xl font-bold text-white'>{appSettings.storeName.toUpperCase()}</h2>
             <p className='text-sm text-gray-400 mt-1'>QUALITY PRODUCTS • BETTER PRICES</p>
             <p className='text-sm text-blue-400 mt-1'>📞 030067937122</p>
             <p className='text-sm text-gray-400 mt-1'>📍 Lahore Road Sargodha</p>
@@ -84,15 +97,15 @@ if (!customer || items.length === 0) {
 
     
 
-      <div className='flex justify-between items-start bg-[#0A1022] border border-white/10 rounded-lg p-4 mt-5'>
+      <div className={`flex justify-between items-start border rounded-lg p-4 mt-5 ${theme === 'dark' ? 'bg-[#0A1022] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
         <div>
-          <p className='text-sm text-gray-400'>Billed To: {customer?.name || "-"}</p>
+          <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Billed To: {customer?.name || "-"}</p>
           <p className='font-semibold mt-1'></p>
-          <p className='text-sm text-gray-400 mt-1'>Payment via: {data.payment || "-"}</p>
-          <p className='text-sm text-gray-400 mt-1'>Date: {data.date || "-"}</p>
+          <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Payment via: {data.payment || "-"}</p>
+          <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Date: {data.date || "-"}</p>
         </div>
         <div className='text-right'>
-          <p className='text-sm text-gray-400'>Status:</p>
+          <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Status:</p>
           {Number(data.remainingAmount) > 0 ? (
             <p className='font-semibold text-amber-400 mt-1'>Pending</p>
           ) : (
@@ -102,7 +115,7 @@ if (!customer || items.length === 0) {
       </div>
 
       <div className='mt-6'>
-        <div className='grid grid-cols-5 pb-3 border-b border-gray-700 text-xs font-semibold text-gray-400'>
+        <div className={`grid grid-cols-5 pb-3 border-b text-xs font-semibold ${theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-600'}`}>
           <p>ITEM DESCRIPTION</p>
           <p className='text-right'>QTY</p>
           <p className='text-right'>SELLING PRICE</p>
@@ -120,7 +133,7 @@ if (!customer || items.length === 0) {
             const totalGSTAmount = gstAmount * (item?.qnt || 0);
 
             return (
-              <div key={item?.id} className='grid grid-cols-5 py-3 border-b border-gray-800 text-sm'>
+              <div key={item?.id} className={`grid grid-cols-5 py-3 border-b text-sm ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
                 <p className='font-medium'>{item?.product || "-"}</p>
                 <p className='text-right'>{item?.qnt || 0}</p>
                 <p className='text-right'>Rs. {sellingPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
@@ -132,11 +145,11 @@ if (!customer || items.length === 0) {
             );
           })
         ) : (
-          <p className='text-sm text-gray-500 py-4'>No items added</p>
+          <p className={`text-sm py-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No items added</p>
         )}
 
         <div className='flex flex-col items-end mt-5 gap-2'>
-          <div className='flex justify-between w-64 text-sm text-gray-300'>
+          <div className={`flex justify-between w-64 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
             <p>Subtotal (without GST):</p>
             <p>Rs. {Number(data.subtotal || (Number(data.total ?? info.totalPrice ?? 0) - Number(data.totalGST || calculatedTotalGST || 0))).toLocaleString()}</p>
           </div>
@@ -148,7 +161,7 @@ if (!customer || items.length === 0) {
             <p>Discount:</p>
             <p>-Rs. {Number(data.discount || 0).toLocaleString()}</p>
           </div>
-          <div className='flex justify-between w-64 border-t border-gray-700 pt-3 mt-1'>
+          <div className={`flex justify-between w-64 border-t pt-3 mt-1 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
             <p className='text-base font-semibold'>Grand Total:</p>
             <p className='text-lg font-bold text-[#1FE39A]'>Rs. {Number(data.total ?? info.totalPrice ?? 0).toLocaleString()}</p>
           </div>
@@ -166,7 +179,7 @@ if (!customer || items.length === 0) {
       </div>
 
       <div className='flex justify-end gap-3 mt-6 no-print'>
-        <button onClick={handlePrint}  type='button' className='flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1E293B] text-white hover:bg-[#334155]'>
+        <button onClick={handlePrint} type='button' className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 ${theme === 'dark' ? 'bg-[#1E293B] hover:bg-[#334155]' : 'bg-gray-700 hover:bg-gray-800'}`}>
           <Printer size={16} />
           Print / PDF
         </button>

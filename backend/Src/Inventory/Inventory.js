@@ -59,6 +59,13 @@ const router=express.Router()
         message: "Enter stock",
       });
     }
+    
+    if (stock < 0) {
+      return res.status(400).send({
+        success: false,
+        message: "Stock cannot be negative",
+      });
+    }
      if (!GST) {
       return res.status(400).send({
         success: false,

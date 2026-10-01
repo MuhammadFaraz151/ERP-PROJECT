@@ -1,11 +1,13 @@
-import { Plus, LogOut, User } from 'lucide-react'
+import { Plus, LogOut, User, Sun, Moon } from 'lucide-react'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setTab } from '../store and slices/tabSlice'
+import { toggleTheme } from '../store and slices/themeSlice'
 
 const Navbar = ({setInvoice,onLogout}) => {
   const tab=useSelector((k)=>(k.tab.tab))
   const { user } = useSelector((k)=>(k.auth))
+  const { theme } = useSelector((k)=>(k.theme))
   const dispatch=useDispatch()
   
   const handleLogout = () => {
@@ -14,7 +16,7 @@ const Navbar = ({setInvoice,onLogout}) => {
   }
   
   return (
-    <div  className={` h-[64px] bg-[#0B1220] border-b border-white/10 flex items-center justify-between px-7`}>
+    <div  className={` h-[64px] border-b flex items-center justify-between px-7 ${theme === 'dark' ? 'bg-[#0B1220] border-white/10' : 'bg-white border-gray-200'}`}>
       
       <div className='flex items-center gap-5'>
         <div className='border border-[#2563EB]/30 bg-[#2563EB]/10 px-3 py-1 rounded-full'>
@@ -23,7 +25,7 @@ const Navbar = ({setInvoice,onLogout}) => {
           </p>
         </div>
 
-        <h1 className='text-white text-lg font-semibold'>
+        <h1 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
          {tab}
         </h1>
       </div>
@@ -35,6 +37,13 @@ const Navbar = ({setInvoice,onLogout}) => {
             <span className='text-sm'>{user.username}</span>
           </div>
         )}
+        <button 
+          onClick={() => dispatch(toggleTheme())}
+          className='flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300'
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          {theme === 'dark' ? 'Light' : 'Dark'}
+        </button>
         <button onClick={()=>{dispatch(setTab("Invoice Generator"));setInvoice(false)}} className='flex items-center gap-2 bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white px-5 py-2.5 rounded-lg font-semibold text-sm shadow-[0_0_20px_rgba(37,99,235,0.35)] hover:shadow-[0_0_25px_rgba(37,99,235,0.55)] transition-all duration-300'>
           <Plus size={18} />
           New Invoice

@@ -8,19 +8,25 @@ import {
   Calendar,
   BarChart3,
   Clock,
+  Wallet,
+  X,
+  Download,
 } from "lucide-react";
 import { setTab } from '../store and slices/tabSlice';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import InvoiceCard from './Invoice/InvoiceCard';
 import InventoryCard from '../components/InventoryCard';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 
-const Dashboard = () => {
+const Dashboard = ({ theme }) => {
   const[data,setdata]=useState({products:null,invocies:null})
   const dispatch=useDispatch()
   const [selectedProfitPeriod, setSelectedProfitPeriod] = useState(null)
   const [showProfitModal, setShowProfitModal] = useState(false)
+  const [showCashModal, setShowCashModal] = useState(false)
   const [filterStartDate, setFilterStartDate] = useState('')
   const [filterEndDate, setFilterEndDate] = useState('')
   const [filterMode, setFilterMode] = useState('profit')
@@ -60,6 +66,10 @@ const lowStockCount = data?.products?.filter((p) => p?.stock < 10).length ?? 0;
 // Calculate total pending amounts from invoices
 const totalPendingAmount = data?.invocies?.reduce((sum, inv) => sum + (inv?.remainingAmount > 0 ? inv?.remainingAmount : 0), 0) ?? 0;
 const pendingInvoicesCount = data?.invocies?.filter(inv => inv?.remainingAmount > 0).length ?? 0;
+
+// Calculate total cash in hand from cash payments
+const cashInvoices = data?.invocies?.filter(inv => inv?.paymentMethod?.toLowerCase() === 'cash') ?? [];
+const totalCashInHand = cashInvoices.reduce((sum, inv) => sum + (inv?.paidAmount || 0), 0) ?? 0;
 
 // Calculate expired products based on expiry date (less than 7 days remaining)
 const expiredProducts = data?.products?.filter((p) => {
@@ -253,6 +263,14 @@ const stats = [
     iconColor: "text-orange-400",
     subtitle: `${pendingInvoicesCount} invoices pending`
   },
+  {
+    title: "Cash in Hand",
+    value: `Rs. ${totalCashInHand.toLocaleString()}`,
+    icon: Wallet,
+    iconColor: "text-green-400",
+    subtitle: `${cashInvoices.length} cash payments`,
+    onClick: () => setShowCashModal(true)
+  },
 ];
 
 const profitCards = [
@@ -261,7 +279,7 @@ const profitCards = [
     value: `Rs. ${dailyProfit.toLocaleString()}`,
     revenue: `Rs. ${dailyRevenue.toLocaleString()}`,
     icon: Calendar,
-    iconColor: "text-emerald-400",
+    iconColor: "text-white",
     period: "daily",
     invoices: dailyInvoices,
   },
@@ -292,6 +310,50 @@ const handleProfitCardClick = (card) => {
   setFilterStartDate('');
   setFilterEndDate('');
   setFilterMode('profit');
+};
+
+const handleDownloadPDF = (card) => {
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(20);
+  doc.text(`${card.title} Report`, 14, 22);
+  
+  // Add date
+  doc.setFontSize(11);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+  
+  // Add summary
+  doc.setFontSize(14);
+  doc.text('Summary', 14, 40);
+  
+  doc.setFontSize(12);
+  doc.text(`Total Revenue: ${card.revenue}`, 14, 48);
+  doc.text(`Total Profit: ${card.value}`, 14, 55);
+  doc.text(`Number of Invoices: ${card.invoices.length}`, 14, 62);
+  
+  // Add invoice details table
+  if (card.invoices.length > 0) {
+    const tableData = card.invoices.map(inv => [
+      inv.invoiceNo,
+      inv.customerName,
+      new Date(inv.createdAt).toLocaleDateString(),
+      `Rs. ${inv.grandTotal.toLocaleString()}`,
+      `Rs. ${calculateInvoiceProfit(inv).toLocaleString()}`
+    ]);
+    
+    autoTable(doc, {
+      startY: 70,
+      head: [['Invoice No', 'Customer', 'Date', 'Revenue', 'Profit']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235] },
+      styles: { fontSize: 10 }
+    });
+  }
+  
+  // Save the PDF
+  doc.save(`${card.title.replace(/\s+/g, '_')}_Report.pdf`);
 };
 
 const applyDateFilter = () => {
@@ -336,31 +398,35 @@ const applyDateFilter = () => {
 };
 
   return (
-    <div className='bg-[#0F172A] h-full flex-col gap-4 p-7'>
+    <div className={`h-full flex-col gap-4 p-7 ${theme === 'dark' ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
         {/* welcome msg */}
-     <div className='flex bg-[#162032] border   border-white/7 justify-between text-white p-7 rounded-xl'>
+     <div className={`flex border justify-between p-7 rounded-xl ${theme === 'dark' ? 'bg-[#162032] border-white/7 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
         <div>
             <h1 className='text-3xl tracking-wider font-bold '>Welcome back, Admin</h1>
             <p className='text-sm'>Here is your real-time financial and inventory overview for today.</p>
         </div>
         <div className='flex gap-3'>
-            <button  onClick={()=>dispatch(setTab("Invoice Generator"))} className='bg-[#3B82F6] border  border-white/10 p-3 rounded-xl'>Create Invoice Now</button>
-            <button onClick={()=>dispatch(setTab("Products"))} className='border p-3  border-white/10 rounded-xl'>Check Inventory</button>
+            <button  onClick={()=>dispatch(setTab("Invoice Generator"))} className={`border p-3 rounded-xl ${theme === 'dark' ? 'bg-[#3B82F6] border-white/10 text-white' : 'bg-blue-600 border-gray-200 text-white'}`}>Create Invoice Now</button>
+            <button onClick={()=>dispatch(setTab("Products"))} className={`border p-3 rounded-xl ${theme === 'dark' ? 'border-white/10 text-white' : 'border-gray-200 text-gray-900'}`}>Check Inventory</button>
         </div>
      </div>
      {/* all sales */}
-     <div className='grid grid-cols-4 mt-5 gap-4'>
+     <div className='grid grid-cols-5 mt-5 gap-4'>
         {stats.map((k,i)=>{
             const Icon=k.icon
             return(
-                <div key={i} className='flex-col py-7 rounded-xl px-5 text-white border border-white/20 bg-[#020617]'>
+                <div 
+                    key={i} 
+                    className={`flex-col py-7 rounded-xl px-5 border ${theme === 'dark' ? 'text-white border-white/20 bg-[#020617]' : 'text-gray-900 border-gray-200 bg-white'} ${k.onClick ? 'cursor-pointer hover:border-white/40 transition-all duration-200' : ''}`}
+                    onClick={k.onClick}
+                >
                     <div className='flex justify-between'>
-                        <p className='text-gray-600 text-[16px] font-bold'>{k.title}</p>
+                        <p className={`text-[16px] font-bold ${theme === 'dark' ? 'text-gray-600' : 'text-gray-500'}`}>{k.title}</p>
                           <Icon className={`h-6 w-6 ${k.iconColor}`} />
                     </div>
                     <div className='mt-4 mb-3'>
                         <h1 className='text-2xl font-bold'>{k.value}</h1>
-                        {k.subtitle && <p className='text-xs text-gray-500 mt-1'>{k.subtitle}</p>}
+                        {k.subtitle && <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{k.subtitle}</p>}
                     </div>
                 </div>
             )
@@ -374,41 +440,52 @@ const applyDateFilter = () => {
             return (
                 <div
                     key={i}
-                    onClick={() => handleProfitCardClick(card)}
-                    className='flex-col py-6 rounded-xl px-5 text-white border border-white/20 bg-[#020617] cursor-pointer hover:border-white/40 transition-all duration-200'
+                    className={`flex-col py-6 rounded-xl px-5 border ${theme === 'dark' ? 'text-white border-white/20 bg-[#020617]' : 'text-gray-900 border-gray-200 bg-white'} cursor-pointer hover:border-white/40 transition-all duration-200`}
                 >
                     <div className='flex justify-between'>
-                        <p className='text-gray-600 text-[14px] font-bold'>{card.title}</p>
-                        <Icon className={`h-5 w-5 ${card.iconColor}`} />
+                        <p className={`text-[14px] font-bold ${theme === 'dark' ? 'text-gray-600' : 'text-gray-500'}`}>{card.title}</p>
+                        <div className='flex gap-2'>
+                            <Icon className={`h-5 w-5 ${card.iconColor}`} />
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownloadPDF(card);
+                                }}
+                                className={`p-1 rounded hover:bg-blue-500/20 transition-colors ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}
+                                title='Download PDF'
+                            >
+                                <Download size={16} />
+                            </button>
+                        </div>
                     </div>
-                    <div className='mt-3 mb-2'>
+                    <div className='mt-3 mb-2' onClick={() => handleProfitCardClick(card)}>
                         <h1 className='text-xl font-bold text-emerald-400'>{card.value}</h1>
                     </div>
-                    <p className='text-xs text-gray-500'>Revenue: {card.revenue}</p>
+                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Revenue: {card.revenue}</p>
                 </div>
             )
         })}
      </div>
      {/* recent invoices and inventory */}
-     <div className='grid grid-cols-1 lg:grid-cols-[1fr_385px] gap-4 text-white mt-4'>
-        <div className='border border-white/7 rounded-xl p-4 min-h-0'>
+     <div className={`grid grid-cols-1 lg:grid-cols-[1fr_385px] gap-4 mt-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+        <div className={`border rounded-xl p-4 min-h-0 ${theme === 'dark' ? 'border-white/7' : 'border-gray-200'}`}>
             <div className='flex justify-between'>
                 <h1 className='text-sm'>Recent Invoices</h1>
                 <p onClick={()=>dispatch(setTab("Sales & Reports"))} className='cursor-pointer text-[#2563EB] text-sm'>View All Sales</p>
             </div>
-  <div className='grid p-4 mb-4 grid-cols-5 gap-4 items-center border rounded-xl border-white/8 mt-4 overflow-x-auto'>
- <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700 whitespace-nowrap">Invoice ID</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700 whitespace-nowrap">Customer</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700 whitespace-nowrap">Date</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700 whitespace-nowrap">Amount</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700 whitespace-nowrap">Status</p>
+  <div className={`grid p-4 mb-4 grid-cols-5 gap-4 items-center border rounded-xl mt-4 overflow-x-auto ${theme === 'dark' ? 'border-white/8' : 'border-gray-200'}`}>
+ <p className={`pb-3 text-sm font-semibold border-b whitespace-nowrap ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Invoice ID</p>
+  <p className={`pb-3 text-sm font-semibold border-b whitespace-nowrap ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Customer</p>
+  <p className={`pb-3 text-sm font-semibold border-b whitespace-nowrap ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Date</p>
+  <p className={`pb-3 text-sm font-semibold border-b whitespace-nowrap ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Amount</p>
+  <p className={`pb-3 text-sm font-semibold border-b whitespace-nowrap ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Status</p>
 
-                {data?.invocies?.slice(-2).map((k)=><InvoiceCard key={k?._id} data={k} isDashboard={true}></InvoiceCard>)}
+                {data?.invocies?.slice(-2).map((k)=><InvoiceCard key={k?._id} data={k} isDashboard={true} theme={theme}></InvoiceCard>)}
             </div>
         </div>
         <div className='flex flex-col gap-4'>
       {/* Pending Amounts */}
-<div className='border border-white/7 rounded-xl p-4 cursor-pointer hover:border-orange-500/30 transition-all duration-200' onClick={()=>dispatch(setTab("Sales & Reports"))}>
+<div className={`border rounded-xl p-4 cursor-pointer hover:border-orange-500/30 transition-all duration-200 ${theme === 'dark' ? 'border-white/7' : 'border-gray-200'}`} onClick={()=>dispatch(setTab("Sales & Reports"))}>
   <div className='flex justify-between'>
     <h1 className='text-sm flex items-center gap-2'>
       <Clock className='h-4 w-4 text-orange-400' />
@@ -424,11 +501,11 @@ const applyDateFilter = () => {
       .map((inv) => (
         <div
           key={inv?._id}
-          className='flex justify-between items-center px-2 py-3 border-b border-white/5 last:border-b-0'
+          className={`flex justify-between items-center px-2 py-3 border-b last:border-b-0 ${theme === 'dark' ? 'border-white/5' : 'border-gray-100'}`}
         >
           <div>
-            <p className='text-white text-sm font-medium'>{inv?.customerName}</p>
-            <p className='text-gray-500 text-xs'>{inv?.invoiceNo}</p>
+            <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{inv?.customerName}</p>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{inv?.invoiceNo}</p>
           </div>
           <span className='rounded-full px-3 py-1 text-xs font-medium bg-orange-900/30 text-orange-400 border border-orange-700'>
             Rs. {Math.round(inv?.remainingAmount || 0)}
@@ -437,13 +514,13 @@ const applyDateFilter = () => {
       ))}
 
     {(!data?.invocies || data?.invocies?.filter((inv) => inv?.remainingAmount > 0).length === 0) && (
-      <p className='text-gray-500 text-sm py-4'>No pending amounts.</p>
+      <p className={`text-sm py-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No pending amounts.</p>
     )}
   </div>
 </div>
 
       {/* Low Stock Alerts */}
-<div className='border border-white/7 rounded-xl p-4 cursor-pointer hover:border-yellow-500/30 transition-all duration-200' onClick={()=>dispatch(setTab("Products"))}>
+<div className={`border rounded-xl p-4 cursor-pointer hover:border-yellow-500/30 transition-all duration-200 ${theme === 'dark' ? 'border-white/7' : 'border-gray-200'}`} onClick={()=>dispatch(setTab("Products"))}>
   <div className='flex justify-between'>
     <h1 className='text-sm flex items-center gap-2'>
       <TriangleAlert className='h-4 w-4 text-yellow-400' />
@@ -458,11 +535,11 @@ const applyDateFilter = () => {
       .map((k) => (
         <div
           key={k?._id}
-          className='flex justify-between items-center px-2 py-3 border-b border-white/5 last:border-b-0'
+          className={`flex justify-between items-center px-2 py-3 border-b last:border-b-0 ${theme === 'dark' ? 'border-white/5' : 'border-gray-100'}`}
         >
           <div>
-            <p className='text-white text-sm font-medium'>{k?.name}</p>
-            <p className='text-gray-500 text-xs'>{k?.category}</p>
+            <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{k?.name}</p>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{k?.category}</p>
           </div>
           <span className='rounded-full px-3 py-1 text-xs font-medium bg-red-900/30 text-red-400 border border-red-700'>
             {k?.stock} units
@@ -471,13 +548,13 @@ const applyDateFilter = () => {
       ))}
 
     {(!data?.products || data?.products?.filter((p) => p?.stock < 5).length === 0) && (
-      <p className='text-gray-500 text-sm py-4'>All products are well stocked.</p>
+      <p className={`text-sm py-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>All products are well stocked.</p>
     )}
   </div>
 </div>
 
      {/* Expiring Soon Products Alerts */}
-<div className='border border-white/7 rounded-xl p-4 cursor-pointer hover:border-red-500/30 transition-all duration-200' onClick={()=>dispatch(setTab("Products"))}>
+<div className={`border rounded-xl p-4 cursor-pointer hover:border-red-500/30 transition-all duration-200 ${theme === 'dark' ? 'border-white/7' : 'border-gray-200'}`} onClick={()=>dispatch(setTab("Products"))}>
   <div className='flex justify-between'>
     <h1 className='text-sm flex items-center gap-2'>
       <TriangleAlert className='h-4 w-4 text-red-400' />
@@ -498,11 +575,11 @@ const applyDateFilter = () => {
         return (
           <div
             key={k?._id}
-            className='flex justify-between items-center px-2 py-3 border-b border-white/5 last:border-b-0'
+            className={`flex justify-between items-center px-2 py-3 border-b last:border-b-0 ${theme === 'dark' ? 'border-white/5' : 'border-gray-100'}`}
           >
             <div>
-              <p className='text-white text-sm font-medium'>{k?.name}</p>
-              <p className='text-gray-500 text-xs'>{k?.category}</p>
+              <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{k?.name}</p>
+              <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{k?.category}</p>
               <p className='text-red-400 text-xs'>Expires: {new Date(k?.expiryDate).toLocaleDateString()} ({daysRemaining} days remaining)</p>
             </div>
             <span className='rounded-full px-3 py-1 text-xs font-medium bg-red-900/30 text-red-400 border border-red-700'>
@@ -512,7 +589,7 @@ const applyDateFilter = () => {
         );
       })
     ) : (
-      <p className='text-gray-500 text-sm py-4'>No products expiring soon.</p>
+      <p className={`text-sm py-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No products expiring soon.</p>
     )}
   </div>
 </div>
@@ -522,19 +599,19 @@ const applyDateFilter = () => {
      {/* Profit Detail Modal */}
      {showProfitModal && selectedProfitPeriod && (
         <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-            <div className='bg-[#0F172A] border border-white/20 rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto'>
+            <div className={`border rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-[#0F172A] border-white/20' : 'bg-white border-gray-200'}`}>
                 <div className='flex justify-between items-center mb-4'>
-                    <h2 className='text-xl font-bold text-white'>
+                    <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                         {selectedProfitPeriod.title} Breakdown
                         {(filterStartDate || filterEndDate) && (
-                            <span className='text-gray-400 text-sm font-normal ml-2'>
+                            <span className={`text-sm font-normal ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                                 ({filterMode === 'profit' ? 'Profit' : 'Revenue'} Filter)
                             </span>
                         )}
                     </h2>
                     <button
                         onClick={() => {setShowProfitModal(false); setSelectedProfitPeriod(null);}}
-                        className='text-gray-400 hover:text-white'
+                        className={theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
                     >
                         ✕
                     </button>
@@ -542,8 +619,8 @@ const applyDateFilter = () => {
 
                 {/* Date Filter Section - Only for Weekly and Monthly */}
                 {selectedProfitPeriod.period !== 'daily' && (
-                    <div className='bg-[#020617] p-4 rounded-lg border border-white/10 mb-4'>
-                        <p className='text-gray-400 text-sm mb-3'>Filter by Date Range</p>
+                    <div className={`p-4 rounded-lg border mb-4 ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+                        <p className={`text-sm mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Filter by Date Range</p>
                         <div className='flex items-center gap-4 mb-3'>
                             <label className='flex items-center gap-2 cursor-pointer'>
                                 <input
@@ -552,9 +629,9 @@ const applyDateFilter = () => {
                                     value='profit'
                                     checked={filterMode === 'profit'}
                                     onChange={(e) => setFilterMode(e.target.value)}
-                                    className='w-4 h-4 border-gray-600 bg-[#0F172A] text-blue-600 focus:ring-blue-500'
+                                    className={`w-4 h-4 border text-blue-600 focus:ring-blue-500 ${theme === 'dark' ? 'border-gray-600 bg-[#0F172A]' : 'border-gray-300 bg-white'}`}
                                 />
-                                <span className='text-gray-300 text-sm'>Filter by Profit</span>
+                                <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Filter by Profit</span>
                             </label>
                             <label className='flex items-center gap-2 cursor-pointer'>
                                 <input
@@ -563,28 +640,30 @@ const applyDateFilter = () => {
                                     value='revenue'
                                     checked={filterMode === 'revenue'}
                                     onChange={(e) => setFilterMode(e.target.value)}
-                                    className='w-4 h-4 border-gray-600 bg-[#0F172A] text-blue-600 focus:ring-blue-500'
+                                    className={`w-4 h-4 border text-blue-600 focus:ring-blue-500 ${theme === 'dark' ? 'border-gray-600 bg-[#0F172A]' : 'border-gray-300 bg-white'}`}
                                 />
-                                <span className='text-gray-300 text-sm'>Filter by Revenue</span>
+                                <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Filter by Revenue</span>
                             </label>
                         </div>
                         <div className='grid grid-cols-2 gap-3'>
                             <div>
-                                <label className='text-gray-500 text-xs block mb-1'>Start Date</label>
+                                <label className={`text-xs block mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Start Date</label>
                                 <input
                                     type='date'
                                     value={filterStartDate}
                                     onChange={(e) => setFilterStartDate(e.target.value)}
-                                    className='w-full bg-[#0F172A] border border-white/20 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500'
+                                    className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-white/20 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                    style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
                                 />
                             </div>
                             <div>
-                                <label className='text-gray-500 text-xs block mb-1'>End Date</label>
+                                <label className={`text-xs block mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>End Date</label>
                                 <input
                                     type='date'
                                     value={filterEndDate}
                                     onChange={(e) => setFilterEndDate(e.target.value)}
-                                    className='w-full bg-[#0F172A] border border-white/20 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500'
+                                    className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-white/20 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                    style={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
                                 />
                             </div>
                         </div>
@@ -613,36 +692,36 @@ const applyDateFilter = () => {
 
                 {/* Display filtered or original data */}
                 <div className='grid grid-cols-2 gap-4 mb-6'>
-                    <div className={`bg-[#020617] p-4 rounded-lg border ${filterMode === 'revenue' ? 'border-emerald-500/50' : 'border-white/10'}`}>
-                        <p className='text-gray-500 text-sm'>Total Revenue</p>
+                    <div className={`p-4 rounded-lg border ${filterMode === 'revenue' ? 'border-emerald-500/50' : theme === 'dark' ? 'border-white/10' : 'border-gray-200'} ${theme === 'dark' ? 'bg-[#020617]' : 'bg-gray-50'}`}>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Total Revenue</p>
                         <p className='text-emerald-400 text-lg font-bold'>{selectedProfitPeriod.revenue}</p>
                     </div>
-                    <div className={`bg-[#020617] p-4 rounded-lg border ${filterMode === 'profit' ? 'border-blue-500/50' : 'border-white/10'}`}>
-                        <p className='text-gray-500 text-sm'>Total Profit</p>
+                    <div className={`p-4 rounded-lg border ${filterMode === 'profit' ? 'border-blue-500/50' : theme === 'dark' ? 'border-white/10' : 'border-gray-200'} ${theme === 'dark' ? 'bg-[#020617]' : 'bg-gray-50'}`}>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Total Profit</p>
                         <p className='text-blue-400 text-lg font-bold'>{selectedProfitPeriod.value}</p>
                     </div>
                 </div>
 
-                <h3 className='text-white font-semibold mb-3'>
+                <h3 className={`font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     Invoices in this period
                     {(filterStartDate || filterEndDate) && (
-                        <span className='text-gray-400 text-sm font-normal ml-2'>
+                        <span className={`text-sm font-normal ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                             (Sorted by {filterMode === 'profit' ? 'Profit' : 'Revenue'})
                         </span>
                     )}
                 </h3>
                 <div className='space-y-2'>
                     {selectedProfitPeriod.invoices.length === 0 ? (
-                        <p className='text-gray-500 text-sm'>No invoices in this period</p>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No invoices in this period</p>
                     ) : (
                         selectedProfitPeriod.invoices.map((inv) => {
                             const profit = calculateInvoiceProfit(inv);
                             return (
-                                <div key={inv._id} className='bg-[#020617] p-3 rounded-lg border border-white/10 flex justify-between items-center'>
+                                <div key={inv._id} className={`p-3 rounded-lg border flex justify-between items-center ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
                                     <div>
-                                        <p className='text-white text-sm font-medium'>{inv.invoiceNo}</p>
-                                        <p className='text-gray-500 text-xs'>{inv.customerName}</p>
-                                        <p className='text-gray-600 text-xs'>{new Date(inv.createdAt).toLocaleDateString()}</p>
+                                        <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{inv.invoiceNo}</p>
+                                        <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{inv.customerName}</p>
+                                        <p className={`text-xs ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>{new Date(inv.createdAt).toLocaleDateString()}</p>
                                     </div>
                                     <div className='text-right'>
                                         <p className='text-emerald-400 text-sm font-medium'>Rs. {inv.grandTotal.toLocaleString()}</p>
@@ -651,6 +730,55 @@ const applyDateFilter = () => {
                                 </div>
                             )
                         })
+                    )}
+                </div>
+            </div>
+        </div>
+     )}
+
+     {/* Cash in Hand Modal */}
+     {showCashModal && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+            <div className={`border rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto ${theme === 'dark' ? 'bg-[#0F172A] border-white/20' : 'bg-white border-gray-200'}`}>
+                <div className='flex justify-between items-center mb-4'>
+                    <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Cash Payment Details</h2>
+                    <button
+                        onClick={() => setShowCashModal(false)}
+                        className={theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className='grid grid-cols-2 gap-4 mb-6'>
+                    <div className={`p-4 rounded-lg border border-green-500/50 ${theme === 'dark' ? 'bg-[#020617]' : 'bg-gray-50'}`}>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Total Cash in Hand</p>
+                        <p className='text-green-400 text-lg font-bold'>Rs. {totalCashInHand.toLocaleString()}</p>
+                    </div>
+                    <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Cash Transactions</p>
+                        <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{cashInvoices.length}</p>
+                    </div>
+                </div>
+
+                <h3 className={`font-semibold mb-3 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Cash Payment Transactions</h3>
+                <div className='space-y-2'>
+                    {cashInvoices.length === 0 ? (
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No cash payments found</p>
+                    ) : (
+                        cashInvoices.map((inv) => (
+                            <div key={inv._id} className={`p-3 rounded-lg border flex justify-between items-center ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+                                <div>
+                                    <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{inv.invoiceNo}</p>
+                                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{inv.customerName}</p>
+                                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>{new Date(inv.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                <div className='text-right'>
+                                    <p className='text-green-400 text-sm font-medium'>Rs. {inv.paidAmount.toLocaleString()}</p>
+                                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Total: Rs. {inv.grandTotal.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        ))
                     )}
                 </div>
             </div>

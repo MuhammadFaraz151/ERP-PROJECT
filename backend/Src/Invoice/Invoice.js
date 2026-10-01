@@ -1,6 +1,7 @@
 const express = require("express");
 const InvoiceModel = require("./invoiceSchema");
 const CustomerModel = require("../Customer.jsx/customerSchema");
+const InventoryModel = require("../Inventory/InventorySchema");
 
 const router = express.Router();
 
@@ -29,6 +30,27 @@ router.post("/invoice", async (req, res) => {
     }
     if (!items || items.length === 0) {
       return res.status(400).send({ success: false, message: "Add at least one item" });
+    }
+
+    // Validate stock availability for each item
+    for (const item of items) {
+      const product = await InventoryModel.findById(item.productId);
+      if (!product) {
+        return res.status(400).send({ 
+          success: false, 
+          message: `Product not found: ${item.product || item.name}` 
+        });
+      }
+      
+      const requestedQty = Number(item.qnt) || 0;
+      const availableStock = Number(product.stock) || 0;
+      
+      if (requestedQty > availableStock) {
+        return res.status(400).send({ 
+          success: false, 
+          message: `Insufficient stock for ${product.name}. Available: ${availableStock}, Requested: ${requestedQty}` 
+        });
+      }
     }
 
     const invoiceNo = generateInvoiceNo();
@@ -72,6 +94,17 @@ router.post("/invoice", async (req, res) => {
     });
 
     await invoice.save();
+
+    // Deduct stock from inventory for each item
+    for (const item of items) {
+      const requestedQty = Number(item.qnt) || 0;
+      if (requestedQty > 0) {
+        await InventoryModel.findByIdAndUpdate(
+          item.productId,
+          { $inc: { stock: -requestedQty } }
+        );
+      }
+    }
 
     // Update customer business amount and remaining amount
     await CustomerModel.findOneAndUpdate(

@@ -12,7 +12,8 @@ router.put("/updateItem", async (req, res) => {
       unitCost,
       stock,
       GST,
-      expiryDate, } = req.body
+      expiryDate,
+      unit, } = req.body
 
             if(!_id){
                   return res.status(400).send({ message: "product not found" })
@@ -44,12 +45,18 @@ router.put("/updateItem", async (req, res) => {
        }
        
         if(stock){
+         if(stock < 0){
+           return res.status(400).send({ message: "Stock cannot be negative" })
+         }
          data.stock=stock
        }
          if(GST){
          data.GST=GST
        }
-        if(expiryDate !== undefined && expiryDate !== ""){
+        if(unit){
+         data.unit = unit
+       }
+       if(expiryDate !== undefined && expiryDate !== ""){
          data.expiryDate = new Date(expiryDate)
        }
        

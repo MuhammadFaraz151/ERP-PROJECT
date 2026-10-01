@@ -15,7 +15,14 @@ const InventorySchema=mongoose.Schema({
         type:Number
     },
      stock:{
-        type:String,
+        type:Number,
+        min: 0,
+        default: 0
+    },
+    unit: {
+        type: String,
+        enum: ['pcs', 'kg', 'gram', 'liter', 'ml'],
+        default: 'pcs'
     },
       GST:{
         type:Number,

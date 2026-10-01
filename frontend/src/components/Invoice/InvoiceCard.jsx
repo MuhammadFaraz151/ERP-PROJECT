@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { CheckCircle2, X, DollarSign } from 'lucide-react'
 
-const InvoiceCard = ({data, onView, onRefresh, isDashboard = false}) => {
+const InvoiceCard = ({data, onView, onRefresh, isDashboard = false, theme}) => {
     const formatted = data?.updatedAt ? data?.updatedAt.replace("T", " ").slice(0, 11) : "-"
     const [showPaymentModal, setShowPaymentModal] = useState(false)
     const [paymentAmount, setPaymentAmount] = useState("")
@@ -51,10 +51,10 @@ const InvoiceCard = ({data, onView, onRefresh, isDashboard = false}) => {
 
   return (
     <>
-        <p className='text-sm text-blue-800'>{data?.invoiceNo}</p>
-        <p className='text-sm'>{data?.customerName || data?.customer}</p>
-        <p className='text-sm'>{formatted}</p>
-        <p className='text-md  text-green-600'>{`RS. ${data?.grandTotal}`}</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>{data?.invoiceNo}</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data?.customerName || data?.customer}</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{formatted}</p>
+        <p className={`text-md text-green-600`}>{`RS. ${data?.grandTotal}`}</p>
         <p className={`text-sm font-semibold ${data?.status === 'Pending' ? 'text-amber-400' : 'text-green-400'}`}>{data?.status}</p>
        {!isDashboard? <div className='flex gap-2 items-center'>
             {onView && (
@@ -74,26 +74,26 @@ const InvoiceCard = ({data, onView, onRefresh, isDashboard = false}) => {
         {/* Payment Modal */}
         {showPaymentModal && (
             <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50'>
-                <div className='bg-[#020617] border border-white/10 rounded-xl p-6 w-[400px]'>
-                    <div className='flex justify-between items-center border-b border-gray-700 pb-4'>
-                        <h2 className='text-lg font-semibold text-white'>Record Payment</h2>
-                        <button onClick={closePaymentModal} className='text-gray-400 hover:text-white'>
+                <div className={`border rounded-xl p-6 w-[400px] ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-white border-gray-200'}`}>
+                    <div className={`flex justify-between items-center border-b pb-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <h2 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Record Payment</h2>
+                        <button onClick={closePaymentModal} className={theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}>
                             <X size={18} />
                         </button>
                     </div>
                     
                     <div className='mt-4'>
-                        <p className='text-sm text-gray-400 mb-2'>Invoice: {data?.invoiceNo}</p>
-                        <p className='text-sm text-gray-400 mb-2'>Customer: {data?.customerName || data?.customer?.name || data?.customer}</p>
+                        <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Invoice: {data?.invoiceNo}</p>
+                        <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Customer: {data?.customerName || data?.customer?.name || data?.customer}</p>
                         <p className='text-sm text-amber-400 mb-4'>Remaining Amount: Rs. {Number(data?.remainingAmount).toLocaleString()}</p>
                         
-                        <label className='text-sm text-gray-400 font-medium mb-1 block'>Payment Amount</label>
+                        <label className={`text-sm font-medium mb-1 block ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Payment Amount</label>
                         <input
                             type='number'
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(e.target.value)}
                             placeholder='Enter amount'
-                            className='w-full p-2 bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-white'
+                            className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                             max={data?.remainingAmount}
                         />
                         
@@ -115,7 +115,7 @@ const InvoiceCard = ({data, onView, onRefresh, isDashboard = false}) => {
                         <button 
                             onClick={closePaymentModal}
                             disabled={loading}
-                            className='px-4 py-2 rounded-lg bg-[#1E293B] text-white hover:bg-[#334155] disabled:opacity-50'
+                            className={`px-4 py-2 rounded-lg hover:disabled:opacity-50 ${theme === 'dark' ? 'bg-[#1E293B] text-white hover:bg-[#334155]' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
                         >
                             Cancel
                         </button>

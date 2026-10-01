@@ -5,7 +5,7 @@ import InventoryCard from './InventoryCard';
 import ProductFormModal from './Products/ProductFormModal';
 import { updateProductApi } from './Products/Productapi';
 
-const Inventory = () => {
+const Inventory = ({ theme }) => {
   const [data,setdata]=useState(null)
   const [search,setsearch]=useState("")
   const [open,setopen]=useState(false)
@@ -19,7 +19,8 @@ const Inventory = () => {
     sellingPrice:"",
     stock:"",
     expiryDate:"",
-    GST:""
+    GST:"",
+    unit: "pcs"
   })
   const [editId,seteditId]=useState(null)
 
@@ -81,7 +82,8 @@ const openEditModal=(product)=>{
     sellingPrice:String(product.sellingPrice),
     stock:String(product.stock),
     expiryDate:product.expiryDate ? new Date(product.expiryDate).toISOString().split('T')[0] : "",
-    GST:String(product.GST)
+    GST:String(product.GST),
+    unit: product.unit || "pcs"
   })
   seteditId(product._id)
   seterr(null)
@@ -91,6 +93,11 @@ const openEditModal=(product)=>{
 const editProduct=async()=>{
   if(Number(formData.unitCost) > Number(formData.sellingPrice)){
     seterr("Unit cost cannot be greater than selling price")
+    return
+  }
+  
+  if(Number(formData.stock) < 0){
+    seterr("Stock cannot be negative")
     return
   }
   
@@ -116,7 +123,8 @@ const editProduct=async()=>{
       sellingPrice:Number(formData.sellingPrice),
       stock:Number(formData.stock),
       expiryDate:formData.expiryDate,
-      GST:formData.GST
+      GST:formData.GST,
+      unit: formData.unit
     })
 
     seterr(null)
@@ -130,7 +138,8 @@ const editProduct=async()=>{
       sellingPrice:"",
       stock:"",
       expiryDate:"",
-      GST:""
+      GST:"",
+      unit: "pcs"
     })
      getProducts()
     setsuccess("Product updated successfully")
@@ -164,39 +173,40 @@ setTimeout(() => setsuccess(null), 3000);
   }
 };
   return (
-    <div className='bg-[#0F172A] h-full flex-col p-7 relative'>
+    <div className={`h-full flex-col p-7 relative ${theme === 'dark' ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
       {success!==null?<div className='absolute z-50 left-[400px]  flex items-center gap-2 bg-green-500/10 border border-green-500/40 rounded-lg px-4 py-3 text-sm text-green-400 shadow-lg z-50'><CheckCircle2 size={16} /><p>{success}</p></div>:null}
 
       {/* inventory summary */}
       <div className='grid grid-cols-3 gap-4  '>
         {inventorySummary.map((k,i)=>{
             return(
-                <div key={i} className='text-white bg-[#020617]  flex flex-col p-4 gap-3 border border-white/7 rounded-xl'>
-                    <p className='text-sm text-gray-600 text-sm mt-3 font-bold'>{k.title}</p>
+                <div key={i} className={`flex flex-col p-4 gap-3 border rounded-xl ${theme === 'dark' ? 'text-white bg-[#020617] border-white/7' : 'text-gray-900 bg-white border-gray-200'}`}>
+                    <p className={`text-sm mt-3 font-bold ${theme === 'dark' ? 'text-gray-600' : 'text-gray-500'}`}>{k.title}</p>
                     <h1  style={{ color: k.color }} className={`text-xl   mtb-3 text-sm font-bold`}>{k.formattedValue}</h1>
                 </div>
             )
         })}
       </div>
       {/* Inventory */}
-      <div className='border rounded-xl border-white/8 p-5 mt-6'>
-        <div className='flex justify-between text-taupe-50  items-center '>
+      <div className={`border rounded-xl p-5 mt-6 ${theme === 'dark' ? 'border-white/8' : 'border-gray-200'}`}>
+        <div className={`flex justify-between items-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             <h1 className='text-md tracking-widest font-bold'>Stock & Inventory Report</h1>
-            <div className="relative">  <Search  size={18}  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"/>
-        <input onChange={(e)=>setsearch(e.target.value)}  className="border  text-[15px] border-white/7 rounded-xl p-4 pl-10"  placeholder="Search by SKU and Name"  type="search" /></div>    </div>
+            <div className="relative">  <Search  size={18}  className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}/>
+        <input onChange={(e)=>setsearch(e.target.value)}  className={`border text-[15px] rounded-xl p-4 pl-10 ${theme === 'dark' ? 'border-white/7 bg-[#0F172A] text-white' : 'border-gray-200 bg-white text-gray-900'}`}  placeholder="Search by SKU and Name"  type="search" /></div>    </div>
       
-          <div className="grid grid-cols-8 p-5 text-sm">
+          <div className="grid grid-cols-9 p-5 text-sm">
   {/* Header */}
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">SKU</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Product Name</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Category</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Unit Cost</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Selling Price</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Stock Units</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Status</p>
-  <p className="pb-3 font-semibold text-gray-400 border-b border-gray-700">Actions</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>SKU</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Product Name</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Category</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Unit Cost</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Selling Price</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Stock</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Unit</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Status</p>
+  <p className={`pb-3 font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Actions</p>
 
-  {filterData?.map((k)=><InventoryCard key={k._id} data={k} onEdit={openEditModal} onDelete={delProduct} compact={false}></InventoryCard>)}
+  {filterData?.map((k)=><InventoryCard key={k._id} data={k} onEdit={openEditModal} onDelete={delProduct} compact={false} theme={theme}></InventoryCard>)}
    
 </div>
       </div>
@@ -211,6 +221,7 @@ setTimeout(() => setsuccess(null), 3000);
     loading={loading}
     onClose={()=>setopen(false)}
     onSubmit={handleEditForm}
+    theme={theme}
   />
 )}
 

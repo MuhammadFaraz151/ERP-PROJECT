@@ -40,7 +40,7 @@ const calculateTotalGST = (items) => {
   }, 0);
 }
 
-const InvoiceDetail = ({ data, onClose, onRefresh }) => {
+const InvoiceDetail = ({ data, onClose, onRefresh, theme }) => {
   if (!data) return null
 
   const items = normalizeItems(data)
@@ -117,15 +117,15 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
   }
 
   return (
-    <div className='h-full w-full text-white flex items-center justify-center bg-black/70 fixed inset-0 z-50'>
-      <div className='printable-invoice bg-[#020617] border border-white/10 rounded-xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto relative'>
+    <div className={`h-full w-full flex items-center justify-center fixed inset-0 z-50 ${theme === 'dark' ? 'bg-black/70 text-white' : 'bg-black/50 text-gray-900'}`}>
+      <div className={`printable-invoice border rounded-xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto relative ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-white border-gray-200'}`}>
 
-        <div className='flex justify-between items-start border-b border-gray-700 pb-4'>
+        <div className={`flex justify-between items-start border-b pb-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className='flex items-center gap-4'>
-            <div className='w-16 h-16 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-white/20'>
-              <img 
-                src={img} 
-                alt='MALIK KARYANA STORE Logo' 
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden border-2 ${theme === 'dark' ? 'bg-white/10 border-white/20' : 'bg-gray-100 border-gray-300'}`}>
+              <img
+                src={img}
+                alt='MALIK KARYANA STORE Logo'
                 className='w-full h-full object-cover'
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -134,22 +134,22 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
               />
             </div>
             <div>
-              <h2 className='text-lg font-bold text-white'>MALIK KARYANA STORE</h2>
-              <p className='text-xs text-gray-400 mt-1'>QUALITY PRODUCTS • BETTER PRICES</p>
+              <h2 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>MALIK KARYANA STORE</h2>
+              <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>QUALITY PRODUCTS • BETTER PRICES</p>
               <p className='text-xs text-blue-400 mt-1'>📞 030067937122</p>
-              <p className='text-xs text-gray-400 mt-1'>📍 Lahore Road Sargodha</p>
+              <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>📍 Lahore Road Sargodha</p>
             </div>
           </div>
           <div className='text-right'>
             <div className='flex items-center justify-end gap-2'>
               <span className={`inline-block text-xs px-3 py-1 rounded-full border no-print ${
-                (data.status === 'Pending') 
-                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-400' 
+                (data.status === 'Pending')
+                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
                   : 'bg-green-500/10 border-green-500/40 text-green-400'
               }`}>
                 {data.status || "Paid"}
               </span>
-              <button onClick={onClose} type='button' className='text-gray-400 hover:text-white no-print'>
+              <button onClick={onClose} type='button' className={`no-print ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
                 <X size={20} />
               </button>
             </div>
@@ -157,14 +157,14 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
           </div>
         </div>
 
-        <div className='flex justify-between items-start bg-[#0A1022] border border-white/10 rounded-lg p-4 mt-5'>
+        <div className={`flex justify-between items-start border rounded-lg p-4 mt-5 ${theme === 'dark' ? 'bg-[#0A1022] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
           <div>
-            <p className='text-sm text-gray-400'>Billed To: {data.customerName || data.customer?.name || data.customer || "-"}</p>
-            <p className='text-sm text-gray-400 mt-1'>Payment via: {data.paymentMethod || data.payment || "-"}</p>
-            <p className='text-sm text-gray-400 mt-1'>Date: {formattedDate || "-"}</p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Billed To: {data.customerName || data.customer?.name || data.customer || "-"}</p>
+            <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Payment via: {data.paymentMethod || data.payment || "-"}</p>
+            <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Date: {formattedDate || "-"}</p>
           </div>
           <div className='text-right'>
-            <p className='text-sm text-gray-400'>Status:</p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Status:</p>
             {Number(data.remainingAmount) > 0 ? (
               <p className='font-semibold text-amber-400 mt-1'>Pending</p>
             ) : (
@@ -174,7 +174,7 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
         </div>
 
         <div className='mt-6'>
-          <div className='grid grid-cols-5 pb-3 border-b border-gray-700 text-xs font-semibold text-gray-400'>
+          <div className={`grid grid-cols-5 pb-3 border-b text-xs font-semibold ${theme === 'dark' ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-600'}`}>
             <p>ITEM DESCRIPTION</p>
             <p className='text-right'>QTY</p>
             <p className='text-right'>SELLING PRICE</p>
@@ -190,9 +190,9 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
               const gstAmount = unitCost * (gstPercentage / 100);
               const totalPrice = sellingPrice * item.qty;
               const totalGSTAmount = gstAmount * item.qty;
-              
+
               return (
-                <div key={item.key} className='grid grid-cols-5 py-3 border-b border-gray-800 text-sm'>
+                <div key={item.key} className={`grid grid-cols-5 py-3 border-b text-sm ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
                   <p className='font-medium'>{item.name || "Item"}</p>
                   <p className='text-right'>{item.qty}</p>
                   <p className='text-right'>Rs. {sellingPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
@@ -202,14 +202,14 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
               );
             })
           ) : (
-            <p className='text-sm text-gray-500 py-4'>
+            <p className={`text-sm py-4 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
               No item details were saved for this invoice. Newly generated invoices will show full line items.
             </p>
           )}
         </div>
 
         <div className='flex flex-col items-end mt-5 gap-2'>
-          <div className='flex justify-between w-64 text-sm text-gray-300'>
+          <div className={`flex justify-between w-64 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
             <p>Subtotal (without GST):</p>
             <p>Rs. {Number(data.subtotal || (Number(data.grandTotal || 0) - totalGST)).toLocaleString()}</p>
           </div>
@@ -221,7 +221,7 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
             <p>Discount:</p>
             <p>-Rs. {Number(data.discount || 0).toLocaleString()}</p>
           </div>
-          <div className='flex justify-between w-64 border-t border-gray-700 pt-3 mt-1'>
+          <div className={`flex justify-between w-64 border-t pt-3 mt-1 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
             <p className='text-base font-semibold'>Grand Total:</p>
             <p className='text-lg font-bold text-[#1FE39A]'>Rs. {Number(data.grandTotal || 0).toLocaleString()}</p>
           </div>
@@ -246,14 +246,14 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
         </div>
 
         <div className='flex justify-end gap-3 mt-6'>
-          <button onClick={handlePrint} type='button' className='flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1E293B] text-white hover:bg-[#334155]'>
+          <button onClick={handlePrint} type='button' className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 ${theme === 'dark' ? 'bg-[#1E293B] hover:bg-[#334155]' : 'bg-gray-700 hover:bg-gray-800'}`}>
             <Printer size={16} />
             Print / PDF
           </button>
           {Number(data.remainingAmount) > 0 && (
-            <button 
+            <button
               onClick={() => setShowPaymentModal(true)}
-              type='button' 
+              type='button'
               className='flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700'
             >
               <DollarSign size={16} />
@@ -281,35 +281,35 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
         {/* Payment Modal */}
         {showPaymentModal && (
           <div className='fixed inset-0 bg-black/70 flex items-center justify-center z-50'>
-            <div className='bg-[#020617] border border-white/10 rounded-xl p-6 w-[400px]'>
-              <div className='flex justify-between items-center border-b border-gray-700 pb-4'>
-                <h2 className='text-lg font-semibold text-white'>Record Payment</h2>
-                <button onClick={closePaymentModal} className='text-gray-400 hover:text-white'>
+            <div className={`border rounded-xl p-6 w-[400px] ${theme === 'dark' ? 'bg-[#020617] border-white/10' : 'bg-white border-gray-200'}`}>
+              <div className={`flex justify-between items-center border-b pb-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h2 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Record Payment</h2>
+                <button onClick={closePaymentModal} className={theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}>
                   <X size={18} />
                 </button>
               </div>
-              
+
               <div className='mt-4'>
-                <p className='text-sm text-gray-400 mb-2'>Invoice: {data?.invoiceNo}</p>
-                <p className='text-sm text-gray-400 mb-2'>Customer: {data?.customerName || data?.customer?.name || data?.customer}</p>
+                <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Invoice: {data?.invoiceNo}</p>
+                <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Customer: {data?.customerName || data?.customer?.name || data?.customer}</p>
                 <p className='text-sm text-amber-400 mb-4'>Remaining Amount: Rs. {Number(data?.remainingAmount).toLocaleString()}</p>
-                
-                <label className='text-sm text-gray-400 font-medium mb-1 block'>Payment Amount</label>
+
+                <label className={`text-sm font-medium mb-1 block ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Payment Amount</label>
                 <input
                   type='number'
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   placeholder='Enter amount'
-                  className='w-full p-2 bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-white'
+                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                   max={data?.remainingAmount}
                 />
-                
+
                 {error && (
                   <div className='flex items-center gap-2 bg-red-500/10 border border-red-500/40 rounded-lg px-3 py-2 mt-3'>
                     <p className='text-sm text-red-400'>{error}</p>
                   </div>
                 )}
-                
+
                 {success && (
                   <div className='flex items-center gap-2 bg-green-500/10 border border-green-500/40 rounded-lg px-3 py-2 mt-3'>
                     <CheckCircle2 size={16} className='text-green-400' />
@@ -317,16 +317,16 @@ const InvoiceDetail = ({ data, onClose, onRefresh }) => {
                   </div>
                 )}
               </div>
-              
+
               <div className='flex justify-end gap-3 mt-6'>
-                <button 
+                <button
                   onClick={closePaymentModal}
                   disabled={loading}
-                  className='px-4 py-2 rounded-lg bg-[#1E293B] text-white hover:bg-[#334155] disabled:opacity-50'
+                  className={`px-4 py-2 rounded-lg disabled:opacity-50 ${theme === 'dark' ? 'bg-[#1E293B] text-white hover:bg-[#334155]' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handlePayment}
                   disabled={loading}
                   className='px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed'

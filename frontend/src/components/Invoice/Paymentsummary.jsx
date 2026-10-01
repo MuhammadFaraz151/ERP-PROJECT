@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import axios from 'axios'
 import { setinfoo } from '../../store and slices/infoSlice'
 
-const PaymentSummary = ({info,setInvoice,customer}) => {
+const PaymentSummary = ({info,setInvoice,customer, theme}) => {
 
   const dispatch=useDispatch()
   const[payment,setpayment]=useState("Bank Transfer")
@@ -163,8 +163,8 @@ const PaymentSummary = ({info,setInvoice,customer}) => {
   }, [totalWithGST, discount])
 
   return (
-    <div className='bg-[#020617] invoice border border-white/7 text-white p-6 rounded-xl w-[420px]'>
-      <h1 className='text-lg font-semibold border-b border-gray-700 pb-3'>Payment Summary</h1>
+    <div className={`invoice p-6 rounded-xl w-[420px] border ${theme === 'dark' ? 'bg-[#020617] text-white border-white/7' : 'bg-white text-gray-900 border-gray-200'}`}>
+      <h1 className={`text-lg font-semibold border-b pb-3 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>Payment Summary</h1>
 
       {error && (
         <div className='mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm'>
@@ -173,36 +173,36 @@ const PaymentSummary = ({info,setInvoice,customer}) => {
       )}
 
       <div className='flex justify-between items-center mt-4'>
-        <p className='text-sm text-gray-400'>Subtotal:</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Subtotal:</p>
         <p className='text-sm font-semibold'>{`Rs.${subtotal}`}</p>
       </div>
 
       <div className='flex justify-between items-center mt-4'>
-        <p className='text-sm text-gray-400'>Total GST:</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Total GST:</p>
         <p className='text-sm font-semibold text-purple-400'>{`Rs.${totalGSTAmount.toLocaleString()}`}</p>
       </div>
 
 
 
       <div className='flex justify-between items-center mt-4'>
-        <label className='text-sm text-gray-400' htmlFor='discount'>Discount (PKR):</label>
+        <label className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} htmlFor='discount'>Discount (PKR):</label>
         <input
           id='discount'
           type='number'
           value={discount}
           onChange={(e)=>setdiscount(e.target.value)}
           placeholder='0'
-          className='p-2 w-[110px] text-right bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500'
+          className={`p-2 w-[110px] text-right border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
         />
       </div>
 
       <div className='flex flex-col mt-4'>
-        <label className='text-sm text-gray-400 mb-1' htmlFor='paymentMethod'>Payment Method</label>
+        <label className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} htmlFor='paymentMethod'>Payment Method</label>
         <select
           id='paymentMethod'
           value={payment}
           onChange={(e)=>setpayment(e.target.value)}
-          className='p-2 w-full bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500'
+          className={`p-2 w-full border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
         >
           <option value='Bank Transfer'>Bank Transfer</option>
           <option value='Cash'>Cash</option>
@@ -211,7 +211,7 @@ const PaymentSummary = ({info,setInvoice,customer}) => {
       </div>
 
       <div className='flex justify-between items-center mt-4'>
-        <label className='text-sm text-gray-400' htmlFor='paidAmount'>Paid Payment (PKR):</label>
+        <label className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} htmlFor='paidAmount'>Paid Payment (PKR):</label>
         <input
           id='paidAmount'
           type='number'
@@ -225,16 +225,16 @@ const PaymentSummary = ({info,setInvoice,customer}) => {
             }
           }}
           placeholder='0'
-          className='p-2 w-[110px] text-right bg-[#0F172A] border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500'
+          className={`p-2 w-[110px] text-right border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-[#0F172A] border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
         />
       </div>
 
       <div className='flex justify-between items-center mt-4'>
-        <label className='text-sm text-gray-400'>Remaining Payment (PKR):</label>
+        <label className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Remaining Payment (PKR):</label>
         <p className='text-sm font-semibold text-amber-400'>Rs.{remainingAmount.toLocaleString()}</p>
       </div>
 
-      <div className='flex justify-between items-center border-t border-gray-700 mt-5 pt-4'>
+      <div className={`flex justify-between items-center border-t mt-5 pt-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
         <p className='text-base font-semibold'>Grand Total:</p>
         <p className='text-lg font-bold text-[#1FE39A]'>Rs.{total}</p>
       </div>

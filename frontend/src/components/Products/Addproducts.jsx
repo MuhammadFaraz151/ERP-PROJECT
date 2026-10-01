@@ -5,7 +5,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import ProductFormModal from './ProductFormModal';
 import { getProductsApi, updateProductApi } from './Productapi';
 
-const Addproducts = ({error,seterror}) => {
+const Addproducts = ({error,seterror, theme}) => {
   const [open,setopen]=useState(false)
   const[err,seterr]=useState(null)
   const[data,setdata]=useState(null)
@@ -19,7 +19,8 @@ const Addproducts = ({error,seterror}) => {
       sellingPrice:"",
       stock:"",
       expiryDate:"",
-      GST:""
+      GST:"",
+      unit: "pcs"
     })
   const [editId,seteditId]=useState(null)
 
@@ -47,6 +48,11 @@ useEffect(() => {
       const baseSellingPrice = Number(formData.sellingPrice)
       if(Number(formData.unitCost) > baseSellingPrice){
         seterr("Unit cost cannot be greater than selling price")
+        return
+      }
+      
+      if(Number(formData.stock) < 0){
+        seterr("Stock cannot be negative")
         return
       }
       
@@ -123,6 +129,11 @@ useEffect(() => {
     const editProduct=async()=>{
       if(Number(formData.unitCost) > Number(formData.sellingPrice)){
         seterr("Unit cost cannot be greater than selling price")
+        return
+      }
+      
+      if(Number(formData.stock) < 0){
+        seterr("Stock cannot be negative")
         return
       }
       
@@ -206,16 +217,16 @@ const filteredData = data?.filter((k) => {
   
 
   return (
-    <div className='bg-[#0F172A] h-full flex-col relative  p-7'>
+    <div className={`h-full flex-col relative  p-7 ${theme === 'dark' ? 'bg-[#0F172A]' : 'bg-gray-50'}`}>
 
       {success!==null?<div className='absolute z-50 left-[400px]  flex items-center gap-2 bg-green-500/10 border border-green-500/40 rounded-lg px-4 py-3 text-sm text-green-400 shadow-lg z-50'><CheckCircle2 size={16} /><p>{success}</p></div>:null}
 
-       <div className='flex bg-[#162032] border   border-white/7 justify-between text-white p-7 rounded-xl'>
+       <div className={`flex border   justify-between p-7 rounded-xl ${theme === 'dark' ? 'bg-[#162032] border-white/7 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
         <div>
             <h1 className='text-2xl tracking-wider font-bold '>Product Catalog</h1>
             <p className='text-sm'>Manage stock items, pricing, and SKU identifiers.</p>
         </div>
-        <div onClick={()=>setisopen(true)} className='flex gap-3 items-center  border  border-white/10 p-3 rounded-xl bg-[#3B82F6]'>
+        <div onClick={()=>setisopen(true)} className={`flex gap-3 items-center  border  p-3 rounded-xl bg-[#3B82F6] ${theme === 'dark' ? 'border-white/10 text-white' : 'border-blue-600 text-white'}`}>
             <Plus />
             <button className=''>Add Product</button>
             
@@ -224,45 +235,45 @@ const filteredData = data?.filter((k) => {
 
      {/* search */}
      <div className='relative mt-6'>
-       <Search size={16} className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-500' />
+       <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
        <input
          value={search}
          onChange={(e)=>setsearch(e.target.value)}
          placeholder='Search by product name or Product code'
-         className='w-full pl-9 p-2 bg-[#162032] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
+         className={`w-full pl-9 p-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${theme === 'dark' ? 'bg-[#162032] border-white/10 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
        />
      </div>
 
      {/* products */}
-     <div className='grid  p-7 mb-4 grid-cols-6 border rounded-xl border-white/8  mt-6'>
- <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Product_Code</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Product Name</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Category</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Price</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Stock</p>
-  <p className="pb-3 text-sm font-semibold text-gray-400 border-b border-gray-700">Actions</p>
+     <div className={`grid  p-7 mb-4 grid-cols-6 border rounded-xl  mt-6 ${theme === 'dark' ? 'border-white/8' : 'border-gray-200'}`}>
+ <p className={`pb-3 text-sm font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Product_Code</p>
+  <p className={`pb-3 text-sm font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Product Name</p>
+  <p className={`pb-3 text-sm font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Category</p>
+  <p className={`pb-3 text-sm font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Price</p>
+  <p className={`pb-3 text-sm font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Stock</p>
+  <p className={`pb-3 text-sm font-semibold border-b ${theme === 'dark' ? 'text-gray-400 border-gray-700' : 'text-gray-600 border-gray-200'}`}>Actions</p>
 
     {filteredData?.map((k)=>{
      const id = k?._id?.slice(20, );
 
         return(
             <React.Fragment key={k._id}>
-    <p className="py-4 text-sm text-[#4D8DFF] border-b border-gray-800 truncate"> {`${id}`}</p>
+    <p className={`py-4 text-sm text-[#4D8DFF] border-b truncate ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}> {`${id}`}</p>
 
-      <p className="py-4 text-sm text-white border-b border-gray-800">   {k?.name}</p>
+      <p className={`py-4 text-sm border-b ${theme === 'dark' ? 'text-white border-gray-800' : 'text-gray-900 border-gray-100'}`}>   {k?.name}</p>
 
-      <p className="py-4 text-sm text-gray-300 border-b border-gray-800">    {k?.category} </p>
+      <p className={`py-4 text-sm border-b ${theme === 'dark' ? 'text-gray-300 border-gray-800' : 'text-gray-600 border-gray-100'}`}>    {k?.category} </p>
 
-      <p className="py-4 text-sm text-white border-b border-gray-800">  Rs. {k?.sellingPrice} </p>
+      <p className={`py-4 text-sm border-b ${theme === 'dark' ? 'text-white border-gray-800' : 'text-gray-900 border-gray-100'}`}>  Rs. {k?.sellingPrice} </p>
    <div>
-  <p className={`py-4 text-sm border-b border-gray-800 flex items-center gap-1 ${k?.stock < 5 ? 'text-red-500' : 'text-[#1FE39A]'}`}>
-    {k?.stock}
+  <p className={`py-4 text-sm border-b flex items-center gap-1 ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'} ${k?.stock < 5 ? 'text-red-500' : 'text-[#1FE39A]'}`}>
+    {k?.stock < 0 ? 0 : k?.stock}
     {k?.stock < 5 && <AlertTriangle size={14} />}
   </p>
 </div>
-    <div className='flex gap-4 border-b border-gray-800'>
-        <button onClick={()=>openEditModal(k)} ><SquarePen className='text-white cursor-pointer ' /></button>
-        <button  onClick={()=>delProduct(k?._id)} className='text-white  cursor-pointer'><Trash2 /></button>
+    <div className={`flex gap-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
+        <button onClick={()=>openEditModal(k)} ><SquarePen className={`cursor-pointer ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`} /></button>
+        <button  onClick={()=>delProduct(k?._id)} className={`cursor-pointer ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}><Trash2 /></button>
     </div>
 
             </React.Fragment>
@@ -280,6 +291,7 @@ const filteredData = data?.filter((k) => {
     loading={loading}
     onClose={()=>setisopen(false)}
     onSubmit={handleForm}
+    theme={theme}
   />
   )}
 {open===true &&(
@@ -291,6 +303,7 @@ const filteredData = data?.filter((k) => {
     loading={loading}
     onClose={()=>setopen(false)}
     onSubmit={handleEditForm}
+    theme={theme}
   />
   )}
     </div>
