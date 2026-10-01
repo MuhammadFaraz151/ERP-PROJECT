@@ -380,3 +380,5 @@ For support, email faraz@example.com or open an issue in the GitHub repository.
 ---
 
 **Note**: This is a comprehensive billing system designed for small to medium businesses. Always backup your data regularly and ensure proper security measures are in place for production use.
+#   E R P - P R O J E C T  
+ 
